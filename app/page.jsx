@@ -2,7 +2,9 @@
 import { useState } from "react";
 import { Card, Button, Typography, List, Tag, Modal, Form, Input  } from "antd";
 import { CheckOutlined } from "@ant-design/icons";
+import { loadStripe } from "@stripe/stripe-js";
 
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 
 const frequencies = [
   { value: "monthly", label: "Monthly", priceSuffix: "/month" },
@@ -12,6 +14,7 @@ const tiers = [
   {
     name: "Basic",
     id: "tier-basic",
+    price_id: "price_1NYYq6HxI0r7Hp29egopeVal",
     price: { monthly: "$5" },
     description: "Perfect for individual users just getting started.",
     features: ["2 active projects", "1GB storage", "Email support"],
@@ -20,6 +23,7 @@ const tiers = [
   {
     name: "Professional",
     id: "tier-professional",
+    price_id: "price_1NYYsKHxI0r7Hp29TyM30ktU",
     price: { monthly: "$15" },
     description: "More power for small teams who want to do more.",
     features: [
@@ -33,6 +37,7 @@ const tiers = [
   {
     name: "Enterprise",
     id: "tier-enterprise",
+    price_id: "price_1NYYvCHxI0r7Hp29ESNneauM",
     price: { monthly: "$30" },
     description: "All the flexibility and power your team needs.",
     features: [
@@ -90,15 +95,19 @@ export default function Pricing() {
   //   console.log(values);
   // };
 
-  const redirectToCheckout = async () => {
-   const response  =  await fetch('/api/stripe', {
+  const redirectToCheckout = async (price_id) => {
+    const {session}  =  await fetch('/api/stripe', {
+
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({email: email})
+    body: JSON.stringify({email: email, lineItems: [{price: price_id, quantity: 1}] })
    }).then(res => res.json())
-   console.log(response)
+
+   const stripe = await stripePromise
+   const {error} = await stripe.redirectToCheckout({ sessionId: session.id})
+   console.log(session.id)
   }
   
 
@@ -174,7 +183,7 @@ export default function Pricing() {
                 {tier.price[frequency.value]}
                 {frequency.priceSuffix}
               </Typography.Text>
-              <Button onClick={redirectToCheckout} type={tier.mostPopular ? "primary" : "default"} block>
+              <Button onClick={redirectToCheckout(tier.price_id)} type={tier.mostPopular ? "primary" : "default"} block>
                 Buy plan
               </Button>
               <List
