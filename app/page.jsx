@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react";
-import { Card, Button, Typography, List, Tag, Modal, Form, Input  } from "antd";
+import { Card, Button, Typography, List, Tag, Modal, Form, Input } from "antd";
 import { CheckOutlined } from "@ant-design/icons";
 import { loadStripe } from "@stripe/stripe-js";
 
@@ -54,7 +54,7 @@ const tiers = [
 export default function Pricing() {
   const [visible, setVisible] = useState(false);
   const [frequency, setFrequency] = useState(frequencies[0]);
-  const [email, setEmail] = useState({email: ""})
+  const [email, setEmail] = useState({ email: "" })
 
   const showModal = () => {
     setVisible(true);
@@ -67,49 +67,30 @@ export default function Pricing() {
   const handleCancel = () => {
     setVisible(false);
   };
-
-
-  const layout = {
-    labelCol: {
-      span: 8,
-    },
-    wrapperCol: {
-      span: 16,
-    },
-  };
-  
-  /* eslint-disable no-template-curly-in-string */
-  const validateMessages = {
-    required: '${label} is required!',
-    types: {
-      email: '${label} is not a valid email!',
-      number: '${label} is not a valid number!',
-    },
-    number: {
-      range: '${label} must be between ${min} and ${max}',
-    },
-  };
-  /* eslint-enable no-template-curly-in-string */
-  
-  // const onFinish = (values) => {
-  //   console.log(values);
-  // };
-
   const redirectToCheckout = async (price_id) => {
-    const {session}  =  await fetch('/api/stripe', {
+    const { session } = await fetch('/api/stripe', {
 
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({email: email, lineItems: [{price: price_id, quantity: 1}] })
-   }).then(res => res.json())
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email: email, lineItems: [{ price: price_id, quantity: 1 }] })
+    }).then(res => res.json())
 
-   const stripe = await stripePromise
-   const {error} = await stripe.redirectToCheckout({ sessionId: session.id})
-   console.log(session.id)
+    console.log(session)
+
+    const stripe = await stripePromise
+    const { error } = await stripe.redirectToCheckout({ sessionId: session.id })
+
+    if (error) {
+      if (error instanceof Error) throw new Error(error.message)
+    } else {
+      throw error
+    }
+
+    console.log(session.id)
   }
-  
+
 
   const handleChange = (e) => {
     setEmail({
@@ -118,37 +99,37 @@ export default function Pricing() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-between relative">
-      <div className="bg-gray-300">
+    <div className="flex min-h-screen items-center justify-center relative">
+      <div className="bg-gray-300 w-5/12 text-center px-7">
 
 
-      <Button type="primary" onClick={showModal} className="bg-blue-300">
-        Upgrade to Pro
-      </Button>
+        <Button type="primary" onClick={showModal} className="bg-blue-300 m-7">
+          Upgrade to Pro
+        </Button>
 
-      {/* ===================form================================ */}
+        {/* ===================form================================ */}
 
 
-      <Form
-   
-  >
-    
-    <Form.Item
-      
-      name={['user', 'email']}
-      label="Email"
-      rules={[
-        {
-          type: 'email',
-        },
-      ]}
-    >
-      <Input name="email" value={email} onChange={handleChange}  />
-    </Form.Item>
-  </Form>
-  </div>
+        <Form
 
-  {/* ===============================================form end ================================================= */}
+        >
+
+          <Form.Item
+
+            name={['user', 'email']}
+            label="Email"
+            rules={[
+              {
+                type: 'email',
+              },
+            ]}
+          >
+            <Input name="email" value={email} onChange={handleChange} />
+          </Form.Item>
+        </Form>
+      </div>
+
+      {/* ===============================================form end ================================================= */}
 
       <Modal
         title="Pricing"
@@ -183,7 +164,7 @@ export default function Pricing() {
                 {tier.price[frequency.value]}
                 {frequency.priceSuffix}
               </Typography.Text>
-              <Button onClick={redirectToCheckout(tier.price_id)} type={tier.mostPopular ? "primary" : "default"} block>
+              <Button onClick={() => redirectToCheckout(tier.price_id)} type={tier.mostPopular ? "primary" : "default"} block>
                 Buy plan
               </Button>
               <List
